@@ -5,6 +5,7 @@ import numpy as np
 SPINS_1D = 5
 SPINS_TOTAL = SPINS_1D * SPINS_1D
 
+# We neglect the magnetization(?) B in this ising model simulation
 
 class Lattice:
     """
@@ -26,14 +27,28 @@ class Lattice:
         else:
             sys.exit('no valid name for initialization lattice; use:'
                      'up/down/random')
+        self.determine_energy()
+        self.determine_magnetization()
 
+    def determine_energy(self):
+        # Using periodic boundary conditions 
+        self.energy = 0
+        for itSpinRow in range(len(self.lattice)):
+            for itSpinCol in range(len(self.lattice)):
+                center_spin = self.lattice[itSpinRow, itSpinCol]
+                nearest_neighbour_spins = self.lattice[(itSpinRow+2) % SPINS_1D, itSpinCol]\
+                    + self.lattice[itSpinRow, (itSpinCol+1) % SPINS_1D]\
+                    + self.lattice[(itSpinRow + SPINS_1D - 2) % SPINS_1D,
+                              itSpinCol]\
+                    + self.lattice[itSpinRow, (itSpinCol + SPINS_1D - 2) %
+                              SPINS_1D]
+                self.energy += -nearest_neighbour_spins * center_spin
 
-
-
-
-
-
+    def determine_magnetization(self):
+        self.magnetization = np.sum(self.lattice)
 
 if __name__ == '__main__':
-    lattice = Lattice('down')
+    lattice = Lattice('random')
     print(lattice.lattice)
+    print(lattice.energy)
+    print(lattice.magnetization)
