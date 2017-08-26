@@ -73,10 +73,14 @@ class Lattice:
             energy_difference_with_new_state = 2 * J * spin * nearest_neighbour_spins
             if energy_difference_with_new_state <= 0:
                 self.lattice[random_row, random_column] = -spin
+                self.energy += energy_difference_with_new_state
+                self.magnetization += 2 * self.lattice[random_row, random_column] 
             elif energy_difference_with_new_state > 0:
                 if self.acceptance_ratio[int(spin * nearest_neighbour_spins / 2 - 1)]\
                    > np.random.rand():
                     self.lattice[random_row, random_column] = -spin
+                    self.energy += energy_difference_with_new_state
+                    self.magnetization += 2 * self.lattice[random_row, random_column] 
                     
 
 if __name__ == '__main__':
@@ -86,3 +90,5 @@ if __name__ == '__main__':
     print(lattice.magnetization)
     lattice.single_sweep_metropolis_algorithm()
     print(lattice.lattice)
+    print(lattice.energy)
+    print(lattice.magnetization)
