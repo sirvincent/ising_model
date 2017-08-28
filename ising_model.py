@@ -1,18 +1,20 @@
-# Simulation of the ising model by using the metroppolis algorithm
+# Simulation of the 2D ising model by using the metroppolis algorithm
 import numpy as np
+import matplotlib.pyplot as plt
 
-SPINS_1D = 5
+SPINS_1D = 5 
 SPINS_TOTAL = SPINS_1D * SPINS_1D
-
 J = 1  # Interaction energy
-# We neglect the magnetization(?) B in this ising model simulation
+k = 1  # Boltzmann constant
+# We neglect the external magnetic field B in this ising model simulation
+MEASUREMENTS = 1000
+
 
 class Lattice:
     """
     The lattice containing up and down spins of 1/2 magnetisatie
     """
     def __init__(self, initialization_method, temperature):
-        # TODO: boolean lattice initialization might save even more memory
         if initialization_method == 'down':
             init_lattice = np.zeros((SPINS_1D, SPINS_1D), dtype=np.int8)
             init_lattice[init_lattice == 0] = -1
@@ -30,12 +32,14 @@ class Lattice:
         self.determine_energy()
         self.determine_magnetization()
         # Acceptance ratio is equal to 1 if new state is lower or equal in
-        # energy otherwise it is, the energy difference is rewritten by pluggin
+        # energy otherwise it is equal to the underneath exponential
+        # The energy difference is rewritten by plugging
         # in the energy update rule. 
         # Exponential is initialized here with all possible energy update
         # values because recalculating everytime is expensive.
         self.acceptance_ratio = np.exp(-2 * 1/temperature *\
                                        J * np.array([2, 4]))
+        self.thermalized = False
 
 
     def determine_energy(self):
@@ -81,14 +85,33 @@ class Lattice:
                     self.lattice[random_row, random_column] = -spin
                     self.energy += energy_difference_with_new_state
                     self.magnetization += 2 * self.lattice[random_row, random_column] 
+
+    def thermalization(self, iteration_until_thermalization):
+        for it in range(iteration_until_thermalization):
+            self.single_sweep_metropolis_algorithm()
+        self.thermalized = True
+
+
                     
 
 if __name__ == '__main__':
-    lattice = Lattice('random', 1)
-    print(lattice.lattice)
-    print(lattice.energy)
-    print(lattice.magnetization)
-    lattice.single_sweep_metropolis_algorithm()
-    print(lattice.lattice)
-    print(lattice.energy)
-    print(lattice.magnetization)
+    temperatureList = np.arange(0.2, 5.2, 0.2)
+    # Before measurements are made allow the system to evolve into thermal
+    # equilibrium (thermalization)
+    # TODO: around the critical temperature (here, T=2.269), increase
+    #       thermalization time due to critical slowing down
+    thermalizationList = np.repeat(100, len(temperatureList)) 
+
+    magnetizationMeasurements = np.empty((len(temperatureList), MEASUREMENTS))
+    energyMeasurements =  np.empty((len(temperatureList), MEASUREMENTS))
+    for element, temperature in enumerate(temperatureList):
+        lattice = Lattice('random', temperature)
+        print('temperature: ', temperature)
+        if lattice.thermalized == False:
+            lattice.thermalization(thermalizationList[element])
+        if lattice.thermalized == True:
+            for it in range(MEASUREMENTS):
+                magnetizationMeasurements[element, it] = lattice.magnetization
+                energyMeasurements[element, it] = lattice.energy
+                lattice.single_sweep_metropolis_algorithm()
+
