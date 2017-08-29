@@ -1,4 +1,4 @@
-# Simulation of the 2D ising model by using the metroppolis algorithm
+# Simulation of the 2D ising model by using the metropolis algorithm
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -92,20 +92,18 @@ class Lattice:
         self.thermalized = True
 
 
-                    
-
 if __name__ == '__main__':
     temperatureList = np.arange(0.2, 5.2, 0.2)
     # Before measurements are made allow the system to evolve into thermal
     # equilibrium (thermalization)
     # TODO: around the critical temperature (here, T=2.269), increase
     #       thermalization time due to critical slowing down
-    thermalizationList = np.repeat(100, len(temperatureList)) 
+    thermalizationList = np.repeat(200, len(temperatureList)) 
 
     magnetizationMeasurements = np.empty((len(temperatureList), MEASUREMENTS))
     energyMeasurements =  np.empty((len(temperatureList), MEASUREMENTS))
     for element, temperature in enumerate(temperatureList):
-        lattice = Lattice('random', temperature)
+        lattice = Lattice('up', temperature)
         print('temperature: ', temperature)
         if lattice.thermalized == False:
             lattice.thermalization(thermalizationList[element])
@@ -114,4 +112,13 @@ if __name__ == '__main__':
                 magnetizationMeasurements[element, it] = lattice.magnetization
                 energyMeasurements[element, it] = lattice.energy
                 lattice.single_sweep_metropolis_algorithm()
+    
+    # Due to that all spins up and down carry the same energy, fluctuations
+    # will sometimes kick after a sweep all spins to up or down. Therefore we
+    # take the absolute value
+    meanMagnetization = np.mean(np.absolute(magnetizationMeasurements),
+                                axis=1) / SPINS_TOTAL 
 
+    plt.plot(temperatureList, meanMagnetization)
+    plt.xlim([0, 5])
+    plt.show()
